@@ -1,0 +1,19 @@
+rate: 2
+count: 20
+partition_by: type
+
+outputs:
+  - type: jsonl
+    for: temp
+    path: out/temp.jsonl
+  - type: csv
+    for: vibration
+    path: out/vibration.csv
+
+devices:
+  - id: engine-A
+    sensors:
+      - kind: temp
+        count: 1
+      - kind: vibration
+        count: 1

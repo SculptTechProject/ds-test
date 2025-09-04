@@ -1,35 +1,74 @@
 ## Example application: live plotting & logging
 
-This demo shows how to run `dummysensors` in a standalone project to simulate engine data, plot it live, and save it to a JSONL file for later analysis.
+This is a **test project for my [`dummysensors`](https://github.com/SculptTechProject/dummysensors) package**, showing how to run it in a standalone repo to simulate engine data, plot it live, and save it for later analysis.
 
-### How to run
+### How to run (YAML config — recommended)
 
-1. Clone this repo (or copy `main.py` to your project):
+`dummysensors` auto-discovers a config file named `config.sensors.yaml` in the current directory.
+
+1. Clone:
+
    ```bash
    git clone https://github.com/SculptTechProject/ds-test
    cd ds-test
    ```
-2. Create a virtual environment and install requirements:
+2. Create venv and install deps:
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate   # Linux/macOS
    .venv\Scripts\activate      # Windows
    pip install -r requirements.txt
    ```
-3. Run the demo:
+3. Run generator (autodetection picks up `config.sensors.yaml`):
+
    ```bash
-   python main.py
+   dummy-sensors run
    ```
 
-This will:
+   Outputs:
 
-* Show a **live matplotlib plot** of temperature and vibration
-* Write JSONL logs to `out.jsonl`
-* Print progress to the console
+   * `out/temp.jsonl` (temperature, JSONL)
+   * `out/vibration.csv` (vibration, CSV)
+
+#### Example `config.sensors.yaml`
+
+```yaml
+rate: 2
+count: 20
+partition_by: type
+
+outputs:
+  - type: jsonl
+    for: temp
+    path: out/temp.jsonl
+  - type: csv
+    for: vibration
+    path: out/vibration.csv
+
+devices:
+  - id: engine-A
+    sensors:
+      - kind: temp
+        count: 1
+      - kind: vibration
+        count: 1
+```
 
 ---
 
-### Live plot + JSONL logging
+### How to run (live plot via `main.py`)
+
+1. After installing requirements:
+
+   ```bash
+   python main.py
+   ```
+2. You will see a **live matplotlib plot** (temperature + vibration) and a log file:
+
+   * `out.jsonl` (JSON Lines with snapshots of temp+vibration)
+
+#### Live plot + JSONL logging (excerpt from `main.py`)
 
 ```python
 import time, json
@@ -61,17 +100,13 @@ plt.ioff(); plt.show()
 with open("out.jsonl", "w", encoding="utf-8") as f:
     for i in range(20):
         t = round(i * 0.5, 2)
-        record_temp = {
-            "ts": t, "device_id": "engine-A", "sensor_id": "temp-0",
-            "type": "temperature", "value": temp.read()
-        }
-        record_vib = {
-            "ts": t, "device_id": "engine-A", "sensor_id": "vib-0",
-            "type": "vibration", "value": vib.read(t)
-        }
+        record_temp = {"ts": t, "device_id": "engine-A", "sensor_id": "temp-0", "type": "temperature", "value": temp.read()}
+        record_vib  = {"ts": t, "device_id": "engine-A", "sensor_id": "vib-0",  "type": "vibration",  "value": vib.read(t)}
         f.write(json.dumps(record_temp) + "\n")
         f.write(json.dumps(record_vib) + "\n")
 ```
+
+---
 
 ### Analysis with Pandas
 
@@ -79,34 +114,16 @@ with open("out.jsonl", "w", encoding="utf-8") as f:
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_json("out.jsonl", lines=True)
-print(df.groupby("type")["value"].mean())
+# From YAML run
+temp = pd.read_json("out/temp.jsonl", lines=True)
+vib  = pd.read_csv("out/vibration.csv")
+print("Avg temp:", temp["value"].mean())
+print("Avg vibration:", vib["value"].mean())
 
-df.pivot(index="ts", columns="type", values="value").plot(subplots=True)
-plt.show()
+fig, axes = plt.subplots(2, 1, figsize=(8, 6))
+axes[0].plot(temp["ts_ms"]/1000.0, temp["value"], color="red"); axes[0].set_ylabel("Temp (°C)")
+axes[1].plot(vib["ts_ms"]/1000.0, vib["value"], color="blue"); axes[1].set_ylabel("Vibration"); axes[1].set_xlabel("Time (s)")
+plt.tight_layout(); plt.show()
 ```
 
-### What should you see?
-<img width="790" height="657" alt="image" src="https://github.com/user-attachments/assets/132a7800-9c51-4ae5-93f9-7327382fd806" /> Live plot
-
-<img width="785" height="559" alt="image" src="https://github.com/user-attachments/assets/4f22a680-b81f-49e6-ab01-3d7424335ceb" />
-
-```bash
-=== Head of dataframe ===
-    ts device_id sensor_id         type      value
-0  0.0  engine-A    temp-0  temperature  84.620850
-1  0.0  engine-A     vib-0    vibration   0.179118
-2  0.5  engine-A    temp-0  temperature  76.254692
-3  0.5  engine-A     vib-0    vibration   0.166054
-4  1.0  engine-A    temp-0  temperature  76.256331
-
-Average values by type:
-type
-temperature    76.844964
-vibration      -0.017095
-Name: value, dtype: float64
-```
-> Analysis with Pandas
-
-This demo produces both a live plot while generating data, and later an offline analysis from the JSONL log.
-
+This demo shows both modes: **YAML config** for reproducible runs and **interactive `main.py`** for quick exploration.

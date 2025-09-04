@@ -86,5 +86,27 @@ df.pivot(index="ts", columns="type", values="value").plot(subplots=True)
 plt.show()
 ```
 
+### What should you see?
+<img width="790" height="657" alt="image" src="https://github.com/user-attachments/assets/132a7800-9c51-4ae5-93f9-7327382fd806" /> Live plot
+
+<img width="785" height="559" alt="image" src="https://github.com/user-attachments/assets/4f22a680-b81f-49e6-ab01-3d7424335ceb" />
+
+```bash
+=== Head of dataframe ===
+    ts device_id sensor_id         type      value
+0  0.0  engine-A    temp-0  temperature  84.620850
+1  0.0  engine-A     vib-0    vibration   0.179118
+2  0.5  engine-A    temp-0  temperature  76.254692
+3  0.5  engine-A     vib-0    vibration   0.166054
+4  1.0  engine-A    temp-0  temperature  76.256331
+
+Average values by type:
+type
+temperature    76.844964
+vibration      -0.017095
+Name: value, dtype: float64
+```
+> Analysis with Pandas
+
 This demo produces both a live plot while generating data, and later an offline analysis from the JSONL log.
 

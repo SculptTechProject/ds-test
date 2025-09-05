@@ -20,10 +20,16 @@ This is a **test project for my [`dummysensors`](https://github.com/SculptTechPr
    .venv\Scripts\activate      # Windows
    pip install -r requirements.txt
    ```
-3. Run generator (autodetection picks up `config.sensors.yaml`):
+3.1. Run generator (autodetection picks up `config.sensors.yaml`):
 
    ```bash
    dummy-sensors run
+   ```
+
+3.2. Run generator via yaml config by providing file:
+
+   ```bash
+   dummy-sensors run --config config.sensors.yaml
    ```
 
    Outputs:
